@@ -51,4 +51,3 @@ License
 MIT License — feel free to use and modify.
 
 Made with ❤️ for educational purposes only.
-Github - @ratul1337
