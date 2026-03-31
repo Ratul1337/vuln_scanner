@@ -1,3 +1,4 @@
 flask
 requests
 beautifulsoup4
+python-wappalyzer  # optional — enables deeper tech fingerprinting
