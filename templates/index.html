@@ -3,294 +3,543 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VULN SCANNER</title>
+    <title>Vuln Scanner</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@400;600&display=swap');
-
         :root {
-            --bg: linear-gradient(135deg, #0a0a0a, #1a0033, #000000);
-            --text: #e0e0e0;
-            --muted: #9ca3af;
-            --accent: #22d3ee;
-            --accent-2: #a855f7;
-            --neon-shadow: 0 0 15px var(--accent), 0 0 30px var(--accent-2);
-            --card-bg: rgba(255,255,255,0.04);
-            --glass-bg: rgba(255,255,255,0.05);
-            --scan-gradient: linear-gradient(90deg, #ec4899, #a855f7, #22d3ee);
-            --top-progress-gradient: linear-gradient(90deg,#06b6d4,#7c3aed);
+            --bg:          #0c0d0f;
+            --bg-2:        #111318;
+            --bg-3:        #181b22;
+            --border:      rgba(255,255,255,0.07);
+            --border-hover:rgba(255,255,255,0.16);
+            --text:        #e8eaf0;
+            --muted:       #636878;
+            --accent:      #e84855;
+            --accent-dim:  rgba(232,72,85,0.12);
+            --accent-2:    #4a9eff;
+            --surface:     rgba(255,255,255,0.03);
+            --surface-hover:rgba(255,255,255,0.06);
         }
-
-        /* Light theme overrides */
         [data-theme="light"] {
-            --bg: linear-gradient(135deg, #f8fafc, #eef2ff);
-            --text: #0f172a;
-            --muted: #475569;
-            --accent: #0ea5b7;
-            --accent-2: #7c3aed;
-            --neon-shadow: 0 0 8px rgba(14,165,183,0.12), 0 0 16px rgba(124,58,237,0.08);
-            --card-bg: rgba(255,255,255,0.85);
-            --glass-bg: rgba(255,255,255,0.6);
-            --scan-gradient: linear-gradient(90deg, #ef476f, #7c3aed, #06b6d4);
-            --top-progress-gradient: linear-gradient(90deg,#06b6d4,#7c3aed);
+            --bg:          #f5f6f8;
+            --bg-2:        #ffffff;
+            --bg-3:        #eef0f4;
+            --border:      rgba(0,0,0,0.08);
+            --border-hover:rgba(0,0,0,0.18);
+            --text:        #0f1117;
+            --muted:       #7a8090;
+            --accent:      #d63040;
+            --accent-dim:  rgba(214,48,64,0.08);
+            --accent-2:    #2b7de9;
+            --surface:     rgba(0,0,0,0.03);
+            --surface-hover:rgba(0,0,0,0.055);
         }
 
-        /* Dark theme explicit (keeps existing look) */
-        [data-theme="dark"] {
-            --bg: linear-gradient(135deg, #0a0a0a, #1a0033, #000000);
-            --text: #e0e0e0;
-            --muted: #9ca3af;
-            --accent: #22d3ee;
-            --accent-2: #a855f7;
-            --neon-shadow: 0 0 15px var(--accent), 0 0 30px var(--accent-2);
-            --card-bg: rgba(255,255,255,0.04);
-            --glass-bg: rgba(255,255,255,0.05);
-            --scan-gradient: linear-gradient(90deg, #ec4899, #a855f7, #22d3ee);
-            --top-progress-gradient: linear-gradient(90deg,#06b6d4,#7c3aed);
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Syne', sans-serif;
             background: var(--bg);
             color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1rem;
         }
-        .neon-text { text-shadow: var(--neon-shadow); }
-        .neon-border { border: 2px solid var(--accent); box-shadow: 0 0 25px var(--accent); }
-        .module-card {
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            background: var(--card-bg);
+
+        /* Subtle background grid */
+        body::before {
+            content: '';
+            position: fixed; inset: 0;
+            background-image:
+                linear-gradient(var(--border) 1px, transparent 1px),
+                linear-gradient(90deg, var(--border) 1px, transparent 1px);
+            background-size: 44px 44px;
+            pointer-events: none;
+            z-index: 0;
         }
-        .module-card:hover {
-            transform: translateY(-8px) scale(1.03);
-            box-shadow: 0 0 40px var(--accent-2);
+
+        .container {
+            position: relative; z-index: 1;
+            width: 100%; max-width: 680px;
         }
-        .scan-btn {
-            background: var(--scan-gradient);
-            transition: all 0.3s;
+
+        /* ── Header ── */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 2.5rem;
         }
-        .scan-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 0 50px rgba(236,72,153,0.3);
+        .logo {
+            display: flex; align-items: center; gap: 10px;
         }
-        .severity-high { border-left: 6px solid #ef4444; background: rgba(239, 68, 68, 0.12); }
-        .severity-medium { border-left: 6px solid #f59e0b; background: rgba(245, 158, 11, 0.12); }
-        .severity-low { border-left: 6px solid #22c55e; background: rgba(34, 197, 94, 0.12); }
-        .glass { background: var(--glass-bg); backdrop-filter: blur(12px); }
-        /* Top progress bar (hidden until real server-side progress is available) */
-        #top-progress { position: fixed; top: 0; left: 0; width: 100%; height: 4px; background: transparent; z-index: 60; display: none; }
-        #top-progress-bar { height: 100%; width: 0%; background: var(--top-progress-gradient); transition: width 300ms ease; box-shadow: 0 0 12px rgba(124,58,237,0.45); }
+        .logo-icon {
+            width: 32px; height: 32px;
+            border: 1.5px solid var(--accent);
+            border-radius: 6px;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--accent); font-size: 13px;
+            flex-shrink: 0;
+        }
+        .logo-text {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 500; font-size: 0.9rem;
+            letter-spacing: 0.06em;
+            color: var(--text);
+        }
+        .logo-version {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem; font-weight: 300;
+            color: var(--muted);
+            letter-spacing: 0.04em;
+        }
+
+        .header-actions { display: flex; align-items: center; gap: 8px; }
+
+        .btn-ghost {
+            display: flex; align-items: center; gap: 6px;
+            padding: 6px 12px; border-radius: 6px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--muted); font-size: 0.78rem;
+            font-family: 'JetBrains Mono', monospace;
+            cursor: pointer; transition: all 0.18s;
+            letter-spacing: 0.03em;
+        }
+        .btn-ghost:hover {
+            background: var(--surface-hover);
+            border-color: var(--border-hover);
+            color: var(--text);
+        }
+
+        /* ── Card ── */
+        .card {
+            background: var(--bg-2);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 2rem;
+        }
+
+        /* ── Section label ── */
+        .section-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.68rem; font-weight: 400;
+            letter-spacing: 0.1em;
+            color: var(--muted);
+            text-transform: uppercase;
+            margin-bottom: 0.6rem;
+        }
+
+        /* ── URL input ── */
+        .input-wrap {
+            position: relative;
+            margin-bottom: 2rem;
+        }
+        .input-prefix {
+            position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+            color: var(--muted); font-size: 0.8rem;
+            font-family: 'JetBrains Mono', monospace;
+            pointer-events: none; user-select: none;
+        }
+        .url-input {
+            width: 100%;
+            background: var(--bg-3);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 13px 14px 13px 40px;
+            color: var(--text);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.88rem;
+            outline: none;
+            transition: border-color 0.18s;
+        }
+        .url-input::placeholder { color: var(--muted); }
+        .url-input:focus { border-color: var(--accent-2); }
+
+        /* ── Module grid ── */
+        .modules-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 8px;
+            margin-bottom: 2rem;
+        }
+        .module-label {
+            display: flex; align-items: center; gap: 10px;
+            padding: 11px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--surface);
+            cursor: pointer;
+            transition: all 0.18s;
+            user-select: none;
+        }
+        .module-label:hover {
+            background: var(--surface-hover);
+            border-color: var(--border-hover);
+        }
+        .module-label input[type="checkbox"] {
+            appearance: none; -webkit-appearance: none;
+            width: 15px; height: 15px; flex-shrink: 0;
+            border: 1.5px solid var(--border-hover);
+            border-radius: 4px;
+            background: var(--bg-3);
+            cursor: pointer; transition: all 0.15s;
+            position: relative;
+        }
+        .module-label input[type="checkbox"]:checked {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+        .module-label input[type="checkbox"]:checked::after {
+            content: '';
+            position: absolute; left: 4px; top: 1.5px;
+            width: 5px; height: 9px;
+            border: 1.5px solid #fff;
+            border-top: none; border-left: none;
+            transform: rotate(45deg);
+        }
+        .module-label:has(input:checked) {
+            border-color: rgba(232,72,85,0.35);
+            background: var(--accent-dim);
+        }
+        .module-name {
+            font-size: 0.82rem; font-weight: 600;
+            line-height: 1.2;
+        }
+        .module-sub {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem; color: var(--muted);
+            margin-top: 1px;
+        }
+
+        /* ── Divider ── */
+        .divider {
+            height: 1px; background: var(--border);
+            margin: 1.5rem 0;
+        }
+
+        /* ── Launch button ── */
+        .launch-btn {
+            width: 100%;
+            background: var(--accent);
+            color: #fff;
+            border: none; border-radius: 8px;
+            padding: 14px;
+            font-family: 'Syne', sans-serif;
+            font-weight: 700; font-size: 0.9rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            transition: all 0.2s;
+            position: relative; overflow: hidden;
+        }
+        .launch-btn::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: rgba(255,255,255,0);
+            transition: background 0.2s;
+        }
+        .launch-btn:hover::before { background: rgba(255,255,255,0.07); }
+        .launch-btn:active { transform: scale(0.99); }
+        .launch-btn:disabled {
+            opacity: 0.45; cursor: not-allowed; transform: none;
+        }
+
+        /* ── Progress ── */
+        .progress-card {
+            margin-top: 1rem;
+            background: var(--bg-2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.2rem 1.5rem;
+            display: none;
+        }
+        .progress-card.visible { display: block; }
+        .progress-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .progress-status {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.72rem; color: var(--accent-2);
+            letter-spacing: 0.06em;
+        }
+        .progress-pct {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.72rem; color: var(--muted);
+        }
+        .progress-track {
+            height: 3px; background: var(--bg-3); border-radius: 99px; overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%; width: 0%;
+            background: linear-gradient(90deg, var(--accent), var(--accent-2));
+            border-radius: 99px;
+            transition: width 0.3s ease;
+        }
+
+        /* ── Export buttons ── */
+        .export-row {
+            display: none; gap: 8px; margin-top: 1rem;
+        }
+        .export-row.visible { display: flex; }
+        .export-btn {
+            flex: 1; padding: 10px;
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 8px; color: var(--text);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.78rem; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+            transition: all 0.18s;
+        }
+        .export-btn:hover {
+            background: var(--surface-hover);
+            border-color: var(--border-hover);
+        }
+
+        /* ── Top progress bar ── */
+        #top-progress {
+            position: fixed; top: 0; left: 0;
+            width: 100%; height: 2px;
+            background: transparent; z-index: 60; display: none;
+        }
+        #top-progress-bar {
+            height: 100%; width: 0%;
+            background: linear-gradient(90deg, var(--accent), var(--accent-2));
+            transition: width 300ms ease;
+        }
+
+        /* ── Footer note ── */
+        .footer-note {
+            margin-top: 1.5rem;
+            text-align: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.68rem; color: var(--muted);
+            letter-spacing: 0.04em;
+            line-height: 1.6;
+        }
+        .dot { color: var(--accent); margin: 0 4px; }
     </style>
 </head>
-<body class="min-h-screen">
-
-    <!-- Top fixed progress bar (page-level / scan indicator) -->
+<body>
     <div id="top-progress" aria-hidden="true"><div id="top-progress-bar"></div></div>
 
-<div class="flex items-center justify-center min-h-screen p-8">
-    <div class="w-full max-w-3xl glass p-8 rounded-3xl">
-        <div class="flex items-center justify-center gap-3 mb-6">
-            <i class="fas fa-skull-crossbones text-3xl text-cyan-400"></i>
-            <div>
-                <h1 class="text-2xl font-bold tracking-widest neon-text text-center">VULN SCANNER</h1>
-                <p class="text-xs text-cyan-400 tracking-[3px] text-center">v1.0</p>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">
+                <div class="logo-icon"><i class="fas fa-crosshairs"></i></div>
+                <div>
+                    <div class="logo-text">Vuln Scanner</div>
+                    <div class="logo-version">v1.0 · security audit tool</div>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="btn-ghost" onclick="toggleTheme()" id="themeBtn">
+                    <i class="fas fa-moon" id="themeIcon"></i>
+                    <span id="themeLabel">Dark</span>
+                </button>
             </div>
         </div>
 
-        <form id="scanForm" method="POST" class="space-y-6" autocomplete="off">
-            <!-- Hidden marker to ensure scans are started only via the launch button -->
-            <input type="hidden" name="manual" id="manualInput" value="0">
-            <div>
-                <label class="block text-sm font-medium text-gray-400 mb-2 text-center">TARGET</label>
-                <div class="flex justify-center">
-                    <input type="url" id="url" name="url" required
-                           class="w-full max-w-xl bg-zinc-900 border border-cyan-500/50 rounded-xl px-5 py-4 text-white focus:outline-none focus:border-cyan-400 placeholder-gray-500"
-                           placeholder="https://target.com">
-                </div>
-            </div>
+        <!-- Main card -->
+        <div class="card">
+            <form id="scanForm" method="POST" autocomplete="off">
+                <input type="hidden" name="manual" id="manualInput" value="0">
 
-            <div>
-                <label class="block text-sm font-medium text-gray-400 mb-4 text-center">SELECT MODULES</label>
-                <div class="grid grid-cols-2 md:grid-cols-3 gap-4 justify-items-center">
+                <!-- Target URL -->
+                <div class="section-label">Target URL</div>
+                <div class="input-wrap">
+                    <span class="input-prefix">
+                        <i class="fas fa-globe" style="font-size:11px;"></i>
+                    </span>
+                    <input
+                        type="url" id="url" name="url" required
+                        class="url-input"
+                        placeholder="https://target.example.com"
+                    >
+                </div>
+
+                <!-- Modules -->
+                <div class="section-label">Scan Modules</div>
+                <div class="modules-grid">
                     {% for key, display in modules %}
-                    <label class="module-card flex flex-col items-center gap-2 bg-zinc-900/70 hover:bg-zinc-800 border border-transparent hover:border-purple-500 p-4 rounded-2xl cursor-pointer text-center">
-                        <input type="checkbox" name="modules" value="{{ key }}" class="w-5 h-5 accent-cyan-400">
-                        <div class="text-sm font-semibold">{{ display.split('(')[0] }}</div>
-                        <div class="text-xs text-gray-500">{{ display.split('(')[1] if '(' in display else '' }}</div>
+                    <label class="module-label">
+                        <input type="checkbox" name="modules" value="{{ key }}">
+                        <div>
+                            <div class="module-name">{{ display.split('(')[0].strip() }}</div>
+                            {% if '(' in display %}
+                            <div class="module-sub">{{ display.split('(')[1].rstrip(')') }}</div>
+                            {% endif %}
+                        </div>
                     </label>
                     {% endfor %}
                 </div>
-            </div>
 
-            <div class="flex justify-center mt-6">
-                <button type="submit" id="scanBtn"
-                        class="scan-btn w-80 text-white font-bold text-lg py-4 rounded-3xl flex items-center justify-center gap-3 shadow-2xl">
-                    <i class="fas fa-bolt"></i>
-                    <span>LAUNCH DEEP SCAN</span>
+                <div class="divider"></div>
+
+                <!-- Launch -->
+                <button type="submit" id="scanBtn" class="launch-btn">
+                    <i class="fas fa-bolt" style="font-size:13px;"></i>
+                    Launch Deep Scan
                 </button>
-            </div>
-        </form>
+            </form>
+        </div>
 
-        <!-- Progress (kept but only shown when server provides scan_id) -->
-        <div id="scan-progress" class="hidden mt-6 glass border border-cyan-400/30 rounded-3xl p-6">
-            <div class="flex justify-between text-sm mb-2">
-                <span class="text-cyan-400">SCANNING IN PROGRESS...</span>
-                <span id="progress-text">0% • Initializing</span>
+        <!-- Progress -->
+        <div id="scan-progress" class="progress-card">
+            <div class="progress-header">
+                <span class="progress-status" id="progress-status">SCANNING</span>
+                <span class="progress-pct" id="progress-text">0%</span>
             </div>
-            <div class="h-3 bg-zinc-800 rounded-full overflow-hidden">
-                <div id="progress-bar" class="h-full bg-gradient-to-r from-cyan-400 to-purple-500 w-0 transition-all duration-300"></div>
+            <div class="progress-track">
+                <div class="progress-fill" id="progress-bar"></div>
             </div>
         </div>
 
-        <!-- Export buttons (appear only after scan complete) -->
-        <div id="export-buttons" class="hidden mt-6 flex gap-4 justify-center">
-            <button onclick="exportReport('txt')" class="py-3 px-6 bg-emerald-600 hover:bg-emerald-500 rounded-3xl font-semibold">📄 Export as TXT</button>
-            <button onclick="exportReport('json')" class="py-3 px-6 bg-violet-600 hover:bg-violet-500 rounded-3xl font-semibold">💾 Export as JSON</button>
+        <!-- Export -->
+        <div id="export-buttons" class="export-row">
+            <button class="export-btn" onclick="exportReport('txt')">
+                <i class="fas fa-file-alt" style="font-size:11px;"></i> Export TXT
+            </button>
+            <button class="export-btn" onclick="exportReport('json')">
+                <i class="fas fa-code" style="font-size:11px;"></i> Export JSON
+            </button>
         </div>
 
-        <!-- Short instructions at bottom -->
-        <div class="mt-8 text-sm text-center text-gray-400">
-            Enter a full URL, pick modules, and click "Launch Deep Scan". Results are saved to the reports folder.
-        </div>
+        <!-- Footer -->
+        <p class="footer-note">
+            Enter target URL<span class="dot">·</span>select modules<span class="dot">·</span>launch scan
+            <br>Results are saved to the reports folder
+        </p>
     </div>
-</div>
 
-<script>
-// Tailwind script already loaded
-// Theme handling: persistent day/night mode
-function updateThemeUI(theme) {
-    const icon = document.getElementById('themeIcon');
-    const label = document.getElementById('themeLabel');
-    if (!icon || !label) return;
-    if (theme === 'light') {
-        icon.className = 'fas fa-sun';
-        label.textContent = 'Light Mode';
-    } else {
-        icon.className = 'fas fa-moon';
-        label.textContent = 'Dark Mode';
-    }
-}
-
-function setTheme(theme) {
-    document.documentElement.dataset.theme = theme;
-    try { localStorage.setItem('vuln_theme', theme); } catch (e) {}
-    updateThemeUI(theme);
-}
-
-function toggleTheme() {
-    const current = document.documentElement.dataset.theme || 'dark';
-    setTheme(current === 'dark' ? 'light' : 'dark');
-}
-
-function initTheme() {
-    let saved = null;
-    try { saved = localStorage.getItem('vuln_theme'); } catch (e) { saved = null; }
-    if (saved === 'light' || saved === 'dark') {
-        setTheme(saved);
-        return;
-    }
-    const prefersLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
-    setTheme(prefersLight ? 'light' : 'dark');
-}
-
-// Server-provided flags for polling
-const SERVER_SCANNING = {{ scanning|tojson }};
-const SCAN_ID = {{ scan_id|tojson }};
-
-document.addEventListener('DOMContentLoaded', function() {
-    initTheme();
-    if (SERVER_SCANNING && SCAN_ID) {
-        startPolling(SCAN_ID);
-    }
-});
-
-
-
-let pollInterval = null;
-
-// Top progress helpers (minimal, used only when server provides a real scan id)
-function setTopProgress(p) {
-    const top = document.getElementById('top-progress-bar');
-    if (top) top.style.width = Math.min(100, Math.max(0, Math.floor(p))) + '%';
-}
-function showTopProgress() { const tp = document.getElementById('top-progress'); if (tp) tp.style.display = 'block'; }
-function hideTopProgress(delay = 500) { setTimeout(() => { const tp = document.getElementById('top-progress'); if (tp) { setTopProgress(0); tp.style.display = 'none'; } }, delay); }
-
-// Polling the backend for real scan progress
-async function startPolling(id) {
-    document.getElementById('scan-progress').classList.remove('hidden');
-    document.getElementById('scanBtn').disabled = true;
-    showTopProgress();
-    setTopProgress(0);
-    pollInterval = setInterval(async () => {
-        try {
-            const res = await fetch(`/status/${id}`);
-            if (!res.ok) return;
-            const data = await res.json();
-            const p = data.progress || 0;
-            const pct = Math.floor(p);
-            document.getElementById('progress-bar').style.width = pct + '%';
-            setTopProgress(pct);
-            document.getElementById('progress-text').textContent = `${pct}% • ${data.message || ''}`;
-            if (data.status === 'completed' || data.status === 'error') {
-                clearInterval(pollInterval);
-                document.getElementById('scanBtn').disabled = false;
-                if (data.status === 'completed') {
-                    confetti({ particleCount: 180, spread: 90, origin: { y: 0.6 } });
-                    const ex = document.getElementById('export-buttons');
-                    if (ex) ex.classList.remove('hidden');
-                }
-                setTimeout(() => { hideTopProgress(600); }, 800);
+    <script>
+        // ── Theme ──────────────────────────────────────────────────────
+        function updateThemeUI(theme) {
+            const icon  = document.getElementById('themeIcon');
+            const label = document.getElementById('themeLabel');
+            if (!icon || !label) return;
+            if (theme === 'light') {
+                icon.className = 'fas fa-sun'; label.textContent = 'Light';
+            } else {
+                icon.className = 'fas fa-moon'; label.textContent = 'Dark';
             }
-        } catch (e) {
-            console.error('Polling error', e);
         }
-    }, 1000);
-}
-
-// Prevent automatic form submissions (require explicit button click)
-const scanForm = document.getElementById('scanForm');
-const scanBtn = document.getElementById('scanBtn');
-const manualInput = document.getElementById('manualInput');
-if (scanBtn) {
-    scanBtn.addEventListener('click', function() {
-        // mark that this submit was manual (button-click)
-        if (manualInput) manualInput.value = '1';
-    });
-}
-
-if (scanForm) {
-    scanForm.addEventListener('submit', function(e) {
-        // only allow submission if user clicked the launch button (manualInput == '1')
-        if (!manualInput || manualInput.value !== '1') {
-            e.preventDefault();
-            return false;
+        function setTheme(t) {
+            document.documentElement.dataset.theme = t;
+            try { localStorage.setItem('vs_theme', t); } catch(e) {}
+            updateThemeUI(t);
         }
-        // proceed with real submission
-        if (scanBtn) scanBtn.disabled = true;
-    });
-}
+        function toggleTheme() {
+            setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+        }
+        function initTheme() {
+            let saved = null;
+            try { saved = localStorage.getItem('vs_theme'); } catch(e) {}
+            if (saved === 'light' || saved === 'dark') { setTheme(saved); return; }
+            setTheme(window.matchMedia?.('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+        }
 
-// Copy PoC
-function copyPoC(btn) {
-    const text = btn.parentElement.textContent.trim();
-    navigator.clipboard.writeText(text).then(() => {
-        btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
-        setTimeout(() => { btn.innerHTML = '<i class="fas fa-copy"></i> Copy PoC'; }, 1800);
-    });
-}
+        // ── Polling ───────────────────────────────────────────────────
+        const SERVER_SCANNING = {{ scanning|tojson }};
+        const SCAN_ID         = {{ scan_id|tojson }};
+        let pollInterval      = null;
 
-// Filter results (simple)
-function filterResults(level) {
-    alert(`Filtered to ${level} severity (demo - full filter coming soon)`);
-}
+        function setTopProgress(p) {
+            const el = document.getElementById('top-progress-bar');
+            if (el) el.style.width = Math.min(100, Math.max(0, p)) + '%';
+        }
+        function showTopProgress() {
+            const tp = document.getElementById('top-progress');
+            if (tp) tp.style.display = 'block';
+        }
+        function hideTopProgress(delay = 500) {
+            setTimeout(() => {
+                const tp = document.getElementById('top-progress');
+                if (tp) { setTopProgress(0); tp.style.display = 'none'; }
+            }, delay);
+        }
 
-// Export buttons (demo)
-function exportReport(type) {
-    alert(`✅ ${type.toUpperCase()} report downloaded!\n\n(Full export logic can be added in app.py later)`);
-}
+        async function startPolling(id) {
+            const progress = document.getElementById('scan-progress');
+            if (progress) progress.classList.add('visible');
+            document.getElementById('scanBtn').disabled = true;
+            showTopProgress(); setTopProgress(0);
 
-</script>
+            pollInterval = setInterval(async () => {
+                try {
+                    const res  = await fetch(`/status/${id}`);
+                    if (!res.ok) return;
+                    const data = await res.json();
+                    const pct  = Math.floor(data.progress || 0);
+
+                    document.getElementById('progress-bar').style.width = pct + '%';
+                    setTopProgress(pct);
+                    document.getElementById('progress-text').textContent = pct + '%';
+                    if (data.message) {
+                        document.getElementById('progress-status').textContent =
+                            data.message.toUpperCase().slice(0, 28);
+                    }
+
+                    if (data.status === 'completed' || data.status === 'error') {
+                        clearInterval(pollInterval);
+                        document.getElementById('scanBtn').disabled = false;
+                        if (data.status === 'completed') {
+                            confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 },
+                                       colors: ['#e84855','#4a9eff','#ffffff'] });
+                            const ex = document.getElementById('export-buttons');
+                            if (ex) ex.classList.add('visible');
+                        }
+                        setTimeout(() => hideTopProgress(600), 800);
+                    }
+                } catch(e) { console.error('Polling error', e); }
+            }, 1000);
+        }
+
+        // ── Form guard ────────────────────────────────────────────────
+        const scanForm    = document.getElementById('scanForm');
+        const scanBtn     = document.getElementById('scanBtn');
+        const manualInput = document.getElementById('manualInput');
+
+        if (scanBtn) {
+            scanBtn.addEventListener('click', () => {
+                if (manualInput) manualInput.value = '1';
+            });
+        }
+        if (scanForm) {
+            scanForm.addEventListener('submit', function(e) {
+                if (!manualInput || manualInput.value !== '1') {
+                    e.preventDefault(); return false;
+                }
+                if (scanBtn) scanBtn.disabled = true;
+            });
+        }
+
+        // ── Utilities ─────────────────────────────────────────────────
+        function exportReport(type) {
+            alert(`${type.toUpperCase()} export — implement in app.py`);
+        }
+        function copyPoC(btn) {
+            const text = btn.parentElement.textContent.trim();
+            navigator.clipboard.writeText(text).then(() => {
+                btn.innerHTML = '<i class="fas fa-check"></i> Copied';
+                setTimeout(() => { btn.innerHTML = '<i class="fas fa-copy"></i> Copy'; }, 1800);
+            });
+        }
+
+        // ── Init ──────────────────────────────────────────────────────
+        document.addEventListener('DOMContentLoaded', () => {
+            initTheme();
+            if (SERVER_SCANNING && SCAN_ID) startPolling(SCAN_ID);
+        });
+    </script>
 </body>
 </html>
